@@ -1,14 +1,17 @@
 import moment from 'moment';
 
-// import { soma, subtracao, multiplicacao, divisao } from './calculadora.js';
-// console.log("Soma: ", soma(10, 5));
-// console.log("Subtração: ", subtracao(10, 5));
-// console.log("Multiplicação: ", multiplicacao(10, 5));
-// console.log("Divisão: ", divisao(10, 5));
-
+// Função para calcular a idade
 function calcularIdade(anoNascimento) {
-    // implemente a lógica para calcular a idade
-    }
-    const anoNascimento = 1990;
-    const idade = calcularIdade(anoNascimento);
-    console.log(`Idade: ${idade} anos`);
+  // Obter o ano atual
+  const anoAtual = moment().year();
+  
+  // Calcular a idade
+  const idade = anoAtual - anoNascimento;
+  
+  return idade;
+}
+
+// Exemplo de uso
+const anoNascimento = 1999;
+const idade = calcularIdade(anoNascimento);
+console.log(`Idade: ${idade} anos`);
