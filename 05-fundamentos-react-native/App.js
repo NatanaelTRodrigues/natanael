@@ -4,6 +4,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import PrimeiroComponente from './componentes/PrimeiroComponente';
 import SegundoComponente from './componentes/SegundoComponente';
 import TerceiroComponente from './componentes/TerceiroComponente';
+import JavascriptComponente from './componentes/JavascriptComponente';
+import Perfil from './componentes/Perfil';
 
 export default function App() {
   return (
@@ -15,6 +17,27 @@ export default function App() {
       <SegundoComponente/>
 
       <TerceiroComponente/>
+
+      <JavascriptComponente/>
+      
+      <Perfil
+       nome="natanael"
+       idade={20}
+       email= "seila@gmail.com"
+
+      />
+      <Perfil
+       nome="natanael"
+       idade={20}
+       email= "seila@gmail.com"
+
+      />
+      <Perfil
+       nome="natanael"
+       idade={20}
+       email= "seila@gmail.com"
+
+      />
 
     </View>
   );
