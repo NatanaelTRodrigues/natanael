@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import PrimeiroComponente from './componentes/PrimeiroComponente';
 import SegundoComponente from './componentes/SegundoComponente';
+import TerceiroComponente from './componentes/TerceiroComponente';
 
 export default function App() {
   return (
@@ -10,8 +11,10 @@ export default function App() {
       <StatusBar style="auto" />
 
       <PrimeiroComponente/>
-      
+
       <SegundoComponente/>
+
+      <TerceiroComponente/>
 
     </View>
   );
