@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 10,
-    color: '#2f2f2f', // Cor de texto mais escura
+    color: '#2f2f2f', 
   },
   filmeDetalhes: {
     fontSize: 14,
