@@ -75,7 +75,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f0f0f0', // Cor de fundo mais suave
+    backgroundColor: 'gray', 
     padding: 15,
   },
   titulo: {
