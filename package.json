@@ -2,7 +2,7 @@
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/native": "^7.1.8",
-    "react-native-paper": "^5.14.0",
+    "react-native-paper": "^5.14.3",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "^4.10.0",
     "react-native-vector-icons": "^10.2.0"
