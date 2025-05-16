@@ -11,17 +11,19 @@ import TabRoutes from './src/routes/TabRoutes';
 import DrawerRoutes from './src/routes/DrawerRoutes';
 
 import NomeNumero from './componentes/NomeNumero';
+import Pessoa from './componentes/Pessoa';
+import GeradorNumeroAleatorio from './componentes/GeradorNumeroAleatorio';
 
 export default function App() {
   return (
     <View>
-     <Statusbar>
+     <StatusBar>
 
+     <Pessoa/>
+    <GeradorNumeroAleatorio/>
       <NomeNumero/>
 
-      
-
-     </Statusbar>
+     </StatusBar>
     </View>
   );
 }
