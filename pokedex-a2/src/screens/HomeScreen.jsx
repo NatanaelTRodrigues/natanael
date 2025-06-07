@@ -1,80 +1,84 @@
-// src/screens/HomeScreen.jsx
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, TouchableOpacity } from 'react-native';
-import { Card, Title, ActivityIndicator, IconButton } from 'react-native-paper';
+import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { Card, Title, ActivityIndicator } from 'react-native-paper';
 import axios from 'axios';
-import { useFavorites } from '../hooks/useFavorites';
 
 export default function HomeScreen({ navigation }) {
   const [pokemons, setPokemons] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites();
-
   useEffect(() => {
     fetchPokemons();
   }, []);
 
-  async function fetchPokemons() {
+  const fetchPokemons = async () => {
     try {
-      setLoading(true);
       const response = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=50');
       const results = response.data.results;
 
-      const pokemonsWithDetails = await Promise.all(
-        results.map(async (pokemon) => {
-          const pokeDetails = await axios.get(pokemon.url);
+      // Buscar detalhes de cada Pokémon
+      const detailed = await Promise.all(
+        results.map(async (p) => {
+          const res = await axios.get(p.url);
           return {
-            id: pokeDetails.data.id,
-            name: pokeDetails.data.name,
-            image: pokeDetails.data.sprites.front_default,
-            types: pokeDetails.data.types.map((t) => t.type.name),
+            id: res.data.id,
+            name: res.data.name,
+            image: res.data.sprites.front_default,
+            types: res.data.types.map((t) => t.type.name),
           };
         })
       );
 
-      setPokemons(pokemonsWithDetails);
+      setPokemons(detailed);
       setLoading(false);
     } catch (error) {
-      console.error(error);
+      console.error('Erro ao carregar pokémons:', error);
       setLoading(false);
     }
-  }
+  };
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('Detalhes', { pokemon: item })}>
+      <Card style={styles.card}>
+        <Card.Cover source={{ uri: item.image }} />
+        <Card.Content>
+          <Title style={styles.title}>{item.name}</Title>
+        </Card.Content>
+      </Card>
+    </TouchableOpacity>
+  );
 
   if (loading) {
-    return <ActivityIndicator style={{ marginTop: 50 }} size="large" />;
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator animating={true} size="large" />
+      </View>
+    );
   }
 
   return (
     <FlatList
       data={pokemons}
       keyExtractor={(item) => item.id.toString()}
-      contentContainerStyle={{ padding: 10 }}
-      renderItem={({ item }) => {
-        const favorited = isFavorite(item.id);
-        return (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Details', { pokemon: item })}
-          >
-            <Card style={{ marginBottom: 10 }}>
-              <Card.Cover source={{ uri: item.image }} />
-              <Card.Title
-                title={item.name.charAt(0).toUpperCase() + item.name.slice(1)}
-                right={(props) => (
-                  <IconButton
-                    {...props}
-                    icon={favorited ? 'star' : 'star-outline'}
-                    color={favorited ? '#f1c40f' : undefined}
-                    onPress={() =>
-                      favorited ? removeFavorite(item.id) : addFavorite(item)
-                    }
-                  />
-                )}
-              />
-            </Card>
-          </TouchableOpacity>
-        );
-      }}
+      renderItem={renderItem}
+      contentContainerStyle={styles.list}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    margin: 10,
+  },
+  title: {
+    textTransform: 'capitalize',
+    marginTop: 8,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  list: {
+    paddingBottom: 16,
+  },
+});

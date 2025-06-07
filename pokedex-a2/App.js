@@ -1,12 +1,15 @@
-// App.js
+import 'react-native-gesture-handler';
 import React from 'react';
-import { PaperProvider } from 'react-native-paper';
-import Routes from './src/navigation/Routes';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { NavigationContainer } from '@react-navigation/native';
+import Routes from './src/navigation/Routes'; // ou seu arquivo de navegação principal
 
 export default function App() {
   return (
-    <PaperProvider>
-      <Routes />
-    </PaperProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <Routes />
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
