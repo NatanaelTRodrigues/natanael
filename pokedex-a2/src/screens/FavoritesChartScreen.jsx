@@ -1,58 +1,60 @@
 import React, { useEffect, useState } from 'react';
-import { View, Dimensions, StyleSheet, ScrollView } from 'react-native';
-import { Title, Text } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Button } from 'react-native';
+import { Text } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BarChart } from 'react-native-chart-kit';
+import { Dimensions } from 'react-native';
 
-export default function FavoritesChartScreen() {
-  const [chartData, setChartData] = useState(null);
+const screenWidth = Dimensions.get('window').width;
+
+export default function FavoriteChartScreen() {
+  const [favorites, setFavorites] = useState([]);
+  const [labels, setLabels] = useState([]);
+  const [notes, setNotes] = useState([]);
 
   useEffect(() => {
-    loadChartData();
+    loadFavorites();
   }, []);
 
-  const loadChartData = async () => {
+  const loadFavorites = async () => {
     try {
-      const json = await AsyncStorage.getItem('favorites');
-      const favorites = json ? JSON.parse(json) : [];
+      const data = await AsyncStorage.getItem('@favorites');
+      const parsed = data ? JSON.parse(data) : [];
 
-      // Filtrar apenas favoritos com notas válidas
-      const validFavorites = favorites.filter(
-        (f) => typeof f.note === 'number' && !isNaN(f.note)
-      );
+      // Filtrar e validar notas e nomes
+      const filtered = parsed
+        .filter(p => p.note && !isNaN(Number(p.note)) && p.name)
+        .slice(0, 10); // Limitar a 10 Pokémon
 
-      if (validFavorites.length === 0) {
-        setChartData(null);
-        return;
-      }
-
-      const labels = validFavorites.map((f) => f.name);
-      const data = validFavorites.map((f) => f.note);
-
-      setChartData({
-        labels,
-        datasets: [{ data }],
-      });
+      setFavorites(filtered);
+      setLabels(filtered.map(p => p.name.charAt(0).toUpperCase() + p.name.slice(1)));
+      setNotes(filtered.map(p => parseFloat(p.note)));
     } catch (error) {
-      console.error('Erro ao carregar dados do gráfico:', error);
+      console.error('Erro ao carregar favoritos:', error);
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Title style={styles.title}>Notas dos Pokémon Favoritos</Title>
-
-      {chartData ? (
+      <Text variant="titleLarge" style={styles.title}>Notas dos Pokémon Favoritos</Text>
+      <Button title="Atualizar gráfico" onPress={loadFavorites} />
+      {notes.length > 0 ? (
         <BarChart
-          data={chartData}
-          width={Dimensions.get('window').width - 32}
-          height={220}
+          data={{
+            labels: labels,
+            datasets: [{ data: notes }]
+          }}
+          width={screenWidth - 20}
+          height={300}
+          yAxisSuffix=""
+          yAxisInterval={1}
           fromZero
           chartConfig={{
-            backgroundGradientFrom: '#fff',
-            backgroundGradientTo: '#fff',
+            backgroundColor: '#fff',
+            backgroundGradientFrom: '#eee',
+            backgroundGradientTo: '#ccc',
             decimalPlaces: 1,
-            color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+            color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
             labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
             style: {
               borderRadius: 16,
@@ -61,7 +63,7 @@ export default function FavoritesChartScreen() {
           style={styles.chart}
         />
       ) : (
-        <Text style={styles.empty}>Nenhuma nota válida para exibir no gráfico.</Text>
+        <Text style={styles.noData}>Nenhum dado válido para exibir no gráfico.</Text>
       )}
     </ScrollView>
   );
@@ -69,19 +71,19 @@ export default function FavoritesChartScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
     alignItems: 'center',
+    padding: 16,
   },
   title: {
     marginBottom: 16,
   },
   chart: {
-    borderRadius: 8,
+    marginVertical: 16,
+    borderRadius: 16,
   },
-  empty: {
-    marginTop: 50,
+  noData: {
+    marginTop: 24,
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: 'gray',
   },
 });

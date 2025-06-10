@@ -16,7 +16,7 @@ export default function HomeScreen({ navigation }) {
       const response = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=50');
       const results = response.data.results;
 
-      // Buscar detalhes de cada Pokémon
+      
       const detailed = await Promise.all(
         results.map(async (p) => {
           const res = await axios.get(p.url);

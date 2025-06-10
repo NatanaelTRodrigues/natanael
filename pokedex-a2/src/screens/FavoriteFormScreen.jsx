@@ -1,155 +1,145 @@
-// src/screens/FavoriteFormScreen.jsx
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { TextInput, Button } from 'react-native-paper';
-import { useForm, Controller } from 'react-hook-form';
+import { View, StyleSheet, Image, Alert } from 'react-native';
+import { Button, TextInput, Text } from 'react-native-paper';
+import { Formik } from 'formik';
 import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import uuid from 'react-native-uuid';
 
+// Funções simples para aplicar máscara automática
+const applyDateMask = (value) => {
+  // Adiciona barras conforme o usuário digita: ex: 01022023 => 01/02/2023
+  let v = value.replace(/\D/g, '').slice(0, 8);
+  if (v.length >= 5) return `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4, 8)}`;
+  if (v.length >= 3) return `${v.slice(0, 2)}/${v.slice(2, 4)}`;
+  if (v.length >= 1) return v;
+  return '';
+};
+
+const applyNoteMask = (value) => {
+  // Permite apenas números de 0 a 10 e aceita decimal (ex: 9.5)
+  let v = value.replace(/[^0-9.]/g, '');
+  if (v.length > 4) v = v.slice(0, 4);
+  if (v > 10) v = '10';
+  return v;
+};
 
 const schema = yup.object().shape({
-  name: yup.string().required('Nome é obrigatório'),
-  image: yup.string().url('Imagem inválida').required('Imagem é obrigatória'),
+  note: yup
+    .number()
+    .min(0, 'Nota mínima é 0')
+    .max(10, 'Nota máxima é 10')
+    .required('Nota é obrigatória'),
   date: yup
     .string()
     .matches(/^\d{2}\/\d{2}\/\d{4}$/, 'Data deve estar no formato DD/MM/AAAA')
     .required('Data é obrigatória'),
-  note: yup
-    .number()
-    .typeError('Nota deve ser um número')
-    .min(0, 'Nota mínima é 0')
-    .max(10, 'Nota máxima é 10')
-    .required('Nota é obrigatória'),
 });
 
 export default function FavoriteFormScreen({ route, navigation }) {
-  const { pokemon, favoriteToEdit } = route.params || {};
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      name: favoriteToEdit?.name || pokemon?.name || '',
-      image: favoriteToEdit?.image || pokemon?.image || '',
-      date: favoriteToEdit?.date || '',
-      note: favoriteToEdit?.note?.toString() || '',
-    },
-    resolver: yupResolver(schema),
-  });
+  const { pokemon, onSave } = route.params;
 
-  const date = watch('date');
   useEffect(() => {
-    const masked = date
-      .replace(/\D/g, '')
-      .slice(0, 8)
-      .replace(/(\d{2})(\d)/, '$1/$2')
-      .replace(/(\d{2})(\d)/, '$1/$2');
-    if (masked !== date) {
-      setValue('date', masked);
-    }
-  }, [date]);
+    navigation.setOptions({ title: `Favoritar ${pokemon.name}` });
+  }, [navigation, pokemon]);
 
-  const onSubmit = async (data) => {
+  const saveFavorite = async (values) => {
     try {
       const existing = await AsyncStorage.getItem('favorites');
       const favorites = existing ? JSON.parse(existing) : [];
 
-      const newFavorite = {
-        id: favoriteToEdit?.id || uuid.v4(),
-        name: data.name,
-        image: data.image,
-        date: data.date,
-        note: parseFloat(data.note),
-      };
+      // Checa se já existe e atualiza
+      const index = favorites.findIndex((f) => f.id === pokemon.id);
+      if (index >= 0) {
+        favorites[index] = { ...favorites[index], ...values };
+      } else {
+        favorites.push({ ...pokemon, ...values });
+      }
 
-      const updatedFavorites = favoriteToEdit
-        ? favorites.map((f) => (f.id === favoriteToEdit.id ? newFavorite : f))
-        : [...favorites, newFavorite];
-
-      await AsyncStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+      await AsyncStorage.setItem('favorites', JSON.stringify(favorites));
+      Alert.alert('Sucesso', 'Pokémon salvo nos favoritos!');
+      if (onSave) onSave(); // Para atualizar lista externa se tiver callback
       navigation.navigate('Favoritos');
     } catch (error) {
-      console.error('Erro ao salvar favorito:', error);
-      Alert.alert('Erro', 'Não foi possível salvar o favorito.');
+      Alert.alert('Erro', 'Falha ao salvar favorito.');
+      console.error(error);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Controller
-        control={control}
-        name="name"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="Nome"
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.name}
-            style={styles.input}
-          />
+      <Image source={{ uri: pokemon.image }} style={styles.image} />
+      <Formik
+        initialValues={{ date: '', note: '' }}
+        validationSchema={schema}
+        onSubmit={(values) => saveFavorite(values)}
+      >
+        {({
+          handleChange,
+          handleBlur,
+          handleSubmit,
+          values,
+          errors,
+          touched,
+          setFieldValue,
+        }) => (
+          <>
+            <TextInput
+              label="Data (DD/MM/AAAA)"
+              value={values.date}
+              onChangeText={(text) => setFieldValue('date', applyDateMask(text))}
+              onBlur={handleBlur('date')}
+              keyboardType="numeric"
+              maxLength={10}
+              style={styles.input}
+              error={touched.date && errors.date}
+            />
+            {touched.date && errors.date && (
+              <Text style={styles.error}>{errors.date}</Text>
+            )}
+
+            <TextInput
+              label="Nota (0 a 10)"
+              value={values.note}
+              onChangeText={(text) => setFieldValue('note', applyNoteMask(text))}
+              onBlur={handleBlur('note')}
+              keyboardType="numeric"
+              maxLength={4}
+              style={styles.input}
+              error={touched.note && errors.note}
+            />
+            {touched.note && errors.note && (
+              <Text style={styles.error}>{errors.note}</Text>
+            )}
+
+            <Button mode="contained" onPress={handleSubmit} style={styles.button}>
+              Salvar Favorito
+            </Button>
+          </>
         )}
-      />
-      <Controller
-        control={control}
-        name="image"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="URL da Imagem"
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.image}
-            style={styles.input}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="date"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="Data (DD/MM/AAAA)"
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.date}
-            keyboardType="numeric"
-            style={styles.input}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="note"
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="Nota (0 a 10)"
-            value={value}
-            onChangeText={onChange}
-            error={!!errors.note}
-            keyboardType="numeric"
-            style={styles.input}
-          />
-        )}
-      />
-      <Button mode="contained" onPress={handleSubmit(onSubmit)} style={styles.button}>
-        Salvar
-      </Button>
+      </Formik>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 16,
+  },
+  image: {
+    width: 150,
+    height: 150,
+    alignSelf: 'center',
+    marginBottom: 24,
   },
   input: {
     marginBottom: 12,
   },
   button: {
-    marginTop: 16,
+    marginTop: 20,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 8,
   },
 });

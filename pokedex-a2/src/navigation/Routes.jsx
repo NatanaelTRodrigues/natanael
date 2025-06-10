@@ -11,9 +11,9 @@ export default function Routes() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        headerShown: false,
         tabBarIcon: ({ color, size }) => {
           let iconName;
-
           if (route.name === 'Home') {
             iconName = 'pokeball';
           } else if (route.name === 'Favoritos') {
@@ -21,10 +21,8 @@ export default function Routes() {
           } else if (route.name === 'Gráfico') {
             iconName = 'chart-pie';
           }
-
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
         },
-        headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />

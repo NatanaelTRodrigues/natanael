@@ -1,22 +1,28 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import FavoriteFormScreen from '../screens/FavoriteFormScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 export default function FavoritesStack() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen 
-        name="Lista de Favoritos" 
+    <Stack.Navigator
+      initialRouteName="Favoritos"
+      screenOptions={{
+        headerShown: true,
+        headerTitleAlign: 'center',
+      }}
+    >
+      <Stack.Screen
+        name="Favoritos"
         component={FavoritesScreen}
-        options={{ title: 'Favoritos' }}
+        options={{ title: 'Pokémons Favoritos' }}
       />
       <Stack.Screen
         name="FavoriteForm"
         component={FavoriteFormScreen}
-        options={{ title: 'Cadastrar/Editar Favorito' }}
+        options={{ title: 'Detalhes do Favorito' }}
       />
     </Stack.Navigator>
   );
